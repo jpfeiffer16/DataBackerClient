@@ -5,32 +5,74 @@ let dataBacker = require('./main');
 
 // process.stdin.pipe(process.stdout);
 
+program.version(require('./package.json').version);
 program
-  .version(require('./package.json').version)
   .command('push')
   .option('-k, --key [string]', 'Key to use')
+  .option('-u, --username [string]', 'Username')
+  .option('-p, --password [string]', 'Password')
   .description('Push stdin to the service')
   .action(push);
+
+program
+  .command('get')
+  .option('-k, --key [string]', 'Key to use')
+  .option('-v, --version [string]', 'Version to fetch')
+  .option('-u, --username [string]', 'Username')
+  .option('-p, --password [string]', 'Password')
+  .description('Push stdin to the service')
+  .action(get);
+
 program.parse(process.argv);
 
-// let res = dataBacker.getContent('jpfeiffer', 'test', 'j');
-// res.pipe(process.stdout);
-
-
 function push(cmd, options) {
-  // if (!program.key) {
-  //   console.error('Must specify a key');
-  //   process.exit(1);
-  // }
+  //Sanity checks
+  if (!cmd.key) {
+    console.error('Must specify a key');
+    process.exit(1);
+  }
+  if (!cmd.username) {
+    console.error('Must specify a username');
+    process.exit(1);
+  }
+  if (!cmd.password) {
+    console.error('Must specify a password');
+    process.exit(1);
+  }
 
-  // process.stdin.resume();
-  // var fs = require('fs');
-  // var response = fs.readSync(process.stdin.fd, 100, 0, "utf8");
-  // process.stdin.pause();
-  // console.log(response);
-  // let stdin = process.stdin.read();
-  // console.log(stdin);
-  // if (process.stdin)
-  console.log('Pushing data to service');
-  //TODO: Pipe stdin to the service
+  const chunks = [];
+  process.stdin.on('data', function (chunk) {
+    chunks.push(chunk);
+  });
+  process.stdin.on('end', function () {
+    let stdin = Buffer.concat(chunks).toString();
+    if (stdin == '') {
+      console.error('No data on stdin');
+      process.exit(1);
+    }
+    console.log('Pushing data to service');
+    dataBacker.push(cmd.username, cmd.password, cmd.key, stdin)
+      .on('end', () => {
+        console.log();
+      })
+      .pipe(process.stdout);
+  });
+}
+
+function get(cmd, options) {
+    if (!cmd.key) {
+    console.error('Must specify a key');
+    process.exit(1);
+  }
+  if (!cmd.username) {
+    console.error('Must specify a username');
+    process.exit(1);
+  }
+  if (!cmd.password) {
+    console.error('Must specify a password');
+    process.exit(1);
+  }
+
+  dataBacker.getContent(cmd.username, cmd.password, cmd.key, cmd.version)
+    .pipe(process.stdout);
 }
