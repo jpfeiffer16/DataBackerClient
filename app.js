@@ -20,6 +20,7 @@ program
   .option('-v, --version [string]', 'Version to fetch')
   .option('-u, --username [string]', 'Username')
   .option('-p, --password [string]', 'Password')
+  .option('-f, --file [string]', 'File')
   .description('Push stdin to the service')
   .action(get);
 
@@ -72,7 +73,14 @@ function get(cmd, options) {
     console.error('Must specify a password');
     process.exit(1);
   }
+  const fs = require('fs');
+  const path = require('path');
+  let res = dataBacker.getContent(cmd.username, cmd.password, cmd.key, cmd.version);
 
-  dataBacker.getContent(cmd.username, cmd.password, cmd.key, cmd.version)
-    .pipe(process.stdout);
+  // console.log(cmd.file);
+  if (cmd.file) {
+    res.pipe(fs.createWriteStream(path.resolve(cmd.file)));
+  } else {
+    res.pipe(process.stdout);
+  }
 }
