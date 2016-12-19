@@ -1,4 +1,4 @@
-#!/user/bin/node
+#!/usr/bin/node
 
 const program = require('commander');
 let dataBacker = require('./main');
