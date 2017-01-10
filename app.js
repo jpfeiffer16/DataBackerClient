@@ -46,7 +46,7 @@ function push(cmd, options) {
     chunks.push(chunk);
   });
   process.stdin.on('end', function () {
-    let stdin = Buffer.concat(chunks).toString();
+    let stdin = Buffer.concat(chunks);
     if (stdin == '') {
       console.error('No data on stdin');
       process.exit(1);
