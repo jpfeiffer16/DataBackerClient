@@ -24,6 +24,15 @@ program
   .description('Push stdin to the service')
   .action(get);
 
+program
+  .command('list')
+  .option('-k, --key [string]', 'Key to use')
+  .option('-v, --version [string]', 'Version to fetch')
+  .option('-u, --username [string]', 'Username')
+  .option('-p, --password [string]', 'Password')
+  .description('List your objects')
+  .action(list);
+
 program.parse(process.argv);
 
 function push(cmd, options) {
@@ -61,7 +70,7 @@ function push(cmd, options) {
 }
 
 function get(cmd, options) {
-    if (!cmd.key) {
+  if (!cmd.key) {
     console.error('Must specify a key');
     process.exit(1);
   }
@@ -83,4 +92,39 @@ function get(cmd, options) {
   } else {
     res.pipe(process.stdout);
   }
+}
+
+function list(cmd, options) {
+  // if (!cmd.key) {
+  //   console.error('Must specify a key');
+  //   process.exit(1);
+  // }
+  if (!cmd.username) {
+    console.error('Must specify a username');
+    process.exit(1);
+  }
+  if (!cmd.password) {
+    console.error('Must specify a password');
+    process.exit(1);
+  }
+
+  let res = dataBacker.getObjects(cmd.username, cmd.password, cmd.key, cmd.version);
+
+  const chunks = [];
+  res.on('data', function (chunk) {
+    chunks.push(chunk);
+  });
+  res.on('end', function () {
+    let result = Buffer.concat(chunks);
+    if (result == '') {
+      console.error('No data recieved');
+      process.exit(1);
+    }
+    let data = JSON.parse(result);
+    console.log('Key\tVersion');
+    console.log('---\t-------');
+    data.forEach((object) => {
+      console.log(`${ object.key }\t${ object.version }`);
+    });
+  });
 }

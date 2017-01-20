@@ -18,7 +18,7 @@ module.exports = (function() {
       body: JSON.stringify(body)
     });
     return res;
-  };
+  }
 
   function push(username, password, key, content) {
     let body = {
@@ -35,10 +35,28 @@ module.exports = (function() {
       body: JSON.stringify(body)
     });
     return res;
-  };
+  }
+
+  function getObjects(username, password, key, version) {
+    let body = {
+      key,
+      version
+    };
+
+    let res = request.post({
+      url: URL + '/get',
+      headers: {
+        'content-type': 'application/json',
+        Authorization: 'Basic ' + new Buffer(`${ username }:${ password }`).toString('base64')
+      },
+      body: JSON.stringify(body)
+    });
+    return res;
+  }
 
   return {
     getContent,
-    push
+    push,
+    getObjects
   };
 })();
