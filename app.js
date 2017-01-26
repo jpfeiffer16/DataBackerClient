@@ -33,6 +33,16 @@ program
   .description('List your objects')
   .action(list);
 
+program
+  .command('write-key')
+  .option('-k, --key [string]', 'Key to use')
+  .option('-v, --version [string]', 'Version to fetch')
+  .option('-u, --username [string]', 'Username')
+  .option('-p, --password [string]', 'Password')
+  .option('-d, --dir [string]', 'Directory')
+  .description('Write queried objects to disc')
+  .action(writeKey);
+
 program.parse(process.argv);
 
 function push(cmd, options) {
@@ -126,5 +136,56 @@ function list(cmd, options) {
     data.forEach((object) => {
       console.log(`${ object.key }\t${ object.version }`);
     });
+  });
+}
+
+function writeKey(cmd, options) {
+  if (!cmd.key) {
+    console.error('Must specify a key');
+    process.exit(1);
+  }
+  if (!cmd.username) {
+    console.error('Must specify a username');
+    process.exit(1);
+  }
+  if (!cmd.password) {
+    console.error('Must specify a password');
+    process.exit(1);
+  }
+  if (!cmd.dir) {
+    console.error('Must specify a directory');
+    process.exit(1);
+  }
+
+  const fs = require('fs');
+  const path = require('path');
+  if (!fs.statSync(cmd.dir).isDirectory()) {
+    console.error('No such directory');
+    process.exit(1);
+  }
+
+  let res = dataBacker.getObjects(cmd.username, cmd.password, cmd.key, cmd.version);
+
+  const chunks = [];
+  res.on('data', function (chunk) {
+    chunks.push(chunk);
+  });
+  res.on('end', function () {
+    let result = Buffer.concat(chunks);
+    if (result == '') {
+      console.error('No data recieved');
+      process.exit(1);
+    }
+    let data = JSON.parse(result);
+    data.forEach((object) => {
+      fs.writeFile(path.join(cmd.dir, object.key + object.version), new Buffer(object.content), (err) => {
+        if (err) {
+          console.error(err);
+          process.exit(1);
+        }
+        console.log(object.key + object.version);
+      });
+    });
+
   });
 }
