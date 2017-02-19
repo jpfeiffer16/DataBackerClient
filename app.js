@@ -180,13 +180,6 @@ function writeKey(cmd, options) {
     data.forEach((object) => {
       let res = dataBacker.getContent(cmd.username, cmd.password, object.key, object.version);
       res.pipe(fs.createWriteStream(path.join(cmd.dir, object.key + object.version)));
-      // fs.writeFile(path.join(cmd.dir, object.key + object.version), new Buffer(object.content), (err) => {
-      //   if (err) {
-      //     console.error(err);
-      //     process.exit(1);
-      //   }
-      //   console.log(object.key + object.version);
-      // });
     });
 
   });
